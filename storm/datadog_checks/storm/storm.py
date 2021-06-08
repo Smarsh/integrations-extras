@@ -17,23 +17,18 @@ EVENT_TYPE = SOURCE_TYPE_NAME = 'storm'
 
 def _g(stat_map, default, func, *components):
     """Helper method to return value, tag tuple from a stat map get.
-
     Note: This safely handles the odd cases where the API can return things like:
       {
         "key1": null,
         "key2": ""
       }
-
       Where we want `key1`, `key2`, and `key3` (absent) to be replaced with a `default` value.
-
     This method will also safely traverse a map for nested objects like:
       {
         "parent": [{"mykey": 1}, {"mykey": 2}]
       }
       When the `components` are `["parent", 1, "mykey"]` this will return `2`.
       When the `components` are `["parent", 1, "myotherkey"]` this will return the default value.
-
-
     :param stat_map: stat map
     :param default: default value
     :param func: function to apply after getting the value.
@@ -65,7 +60,6 @@ def _g(stat_map, default, func, *components):
 
 def _float(v):
     """Try to convert to a float
-
     :param v: value
     :rtype: float
     """
@@ -77,7 +71,6 @@ def _float(v):
 
 def _long(v):
     """Try to convert to a long
-
     :param v: value
     :rtype: long
     """
@@ -89,7 +82,6 @@ def _long(v):
 
 def _bool(v):
     """Try to convert to a boolean
-
     :param v: value
     :rtype: bool
     """
@@ -103,7 +95,6 @@ def _bool(v):
 
 def _get_length(stat_map, default, *components):
     """Helper Function to safely get the length of an array type from the map.
-
     :param stat_map: stat map
     :param default: default length value
     :param components: components in order to traverse.
@@ -115,7 +106,6 @@ def _get_length(stat_map, default, *components):
 
 def _get_long(stat_map, default, *components):
     """Helper Function to safely get the long value from the map.
-
     :param stat_map: stat map
     :param default: default length value
     :param components: components in order to traverse.
@@ -127,7 +117,6 @@ def _get_long(stat_map, default, *components):
 
 def _get_float(stat_map, default, *components):
     """Helper Function to safely get the float value from the map.
-
     :param stat_map: stat map
     :param default: default length value
     :param components: components in order to traverse.
@@ -139,7 +128,6 @@ def _get_float(stat_map, default, *components):
 
 def _get_string(stat_map, default, *components):
     """Helper Function to safely get the string value from the map.
-
     :param stat_map: stat map
     :param default: default string value
     :param components: components in order to traverse.
@@ -151,7 +139,6 @@ def _get_string(stat_map, default, *components):
 
 def _get_bool(stat_map, default, *components):
     """Helper Function to safely get the boolean value from the map.
-
     :param stat_map: stat map
     :param default: default boolean value
     :param components: components in order to traverse.
@@ -163,7 +150,6 @@ def _get_bool(stat_map, default, *components):
 
 def _get_list(stat_map, *components):
     """Helper Function to safely get the list value from the map.
-
     :param stat_map: stat map
     :param components: components in order to traverse.
     :return: list of component
@@ -178,7 +164,6 @@ def _get_list(stat_map, *components):
 
 def _get_dict(stat_map, *components):
     """Helper Function to safely get the list value from the map.
-
     :param stat_map: stat map
     :param components: components in order to traverse.
     :return: dict of component
@@ -199,13 +184,12 @@ class StormCheck(AgentCheck):
 
     DEFAULT_STORM_SERVER = 'http://localhost:9005'
     DEFAULT_STORM_ENVIRONMENT = 'dev'
-    DEFAULT_STORM_INTERVALS = [60]
+    DEFAULT_STORM_INTERVALS = [600]
 
     class StormVersion(object):
         @classmethod
         def from_string(cls, version_string):
             """Returns a StormVersion from a given version string.
-
             :param version_string: Version string, like "1.2.0-RC1" or "1.2.0"
             :type version_string: str
             :return: Storm Version
@@ -227,9 +211,7 @@ class StormCheck(AgentCheck):
 
         def __lt__(self, other):
             """Check if this version is less than another version.
-
             Ignores classification.
-
             :param other: storm version
             :type other: StormCheck.StormVersion | str
             :return: < other version
@@ -271,7 +253,6 @@ class StormCheck(AgentCheck):
 
     def get_storm_cluster_summary(self):
         """Make the storm cluster summary metric request.
-
         :return: Cluster Summary Stats Response
         :rtype: dict
         """
@@ -280,7 +261,6 @@ class StormCheck(AgentCheck):
 
     def get_storm_nimbus_summary(self):
         """Make the storm nimbus summary metric request.
-
         :return: Nimbus Summary Stats Response
         :rtype: dict
         """
@@ -289,7 +269,6 @@ class StormCheck(AgentCheck):
 
     def get_storm_supervisor_summary(self):
         """Make the storm supervisor summary metric request.
-
         :return: Supervisor Summary Stats Response
         :rtype: dict
         """
@@ -298,16 +277,15 @@ class StormCheck(AgentCheck):
 
     def get_storm_topology_summary(self):
         """Make the storm topology summary metric request.
-
         :return: Topology Summary Stats Response
         :rtype: dict
         """
         self.log.debug("Retrieving Topology Summary Stats")
         return self.get_request_json("/api/v1/topology/summary", "Error retrieving Storm Topology Summary")
 
-    def get_topology_info(self, topology_id, interval=60):
+    def get_topology_info(self, topology_id, interval=600):
         """Make the topology info metric request.
-
+        :param interval:
         :param topology_id: Topology Id
         :type topology_id: str
         :return: Topology Info Response
@@ -321,32 +299,8 @@ class StormCheck(AgentCheck):
             params=params,
         )
 
-    def get_topology_metrics(self, topology_id, interval=60, storm_version=None):
-        """Make the storm topology metrics request.
-
-        :param topology_id: Topology Id
-        :type topology_id: str
-        :param interval: Interval in seconds
-        :type interval: int|long
-        :return: Topology Metrics Stats Response
-        :rtype: dict
-        """
-
-        # try 1.2 by default
-        endpoint = "/api/v1/topology/{}/metrics"
-        if not storm_version or storm_version < '1.2.0':
-            endpoint = "/api/v1/topology/{}"
-
-        params = {'window': interval}
-        return self.get_request_json(
-            endpoint.format(topology_id),
-            "Error retrieving Storm Topology Metrics for topology:{}".format(topology_id),
-            params=params,
-        )
-
     def process_cluster_stats(self, cluster_stats):
         """Process Cluster Stats Response
-
         :param cluster_stats: Cluster stats response
         :type cluster_stats: dict
         :return: Version info
@@ -355,8 +309,8 @@ class StormCheck(AgentCheck):
         if len(cluster_stats) >= 0:
             version = (
                 _get_string(cluster_stats, _get_string(cluster_stats, 'unknown', 'stormVersion'), 'version')
-                .replace(' ', '_')
-                .lower()
+                    .replace(' ', '_')
+                    .lower()
             )
             storm_version = 'stormVersion:{}'.format(version)
             tags = [storm_version]
@@ -399,7 +353,6 @@ class StormCheck(AgentCheck):
 
     def process_nimbus_stats(self, nimbus_stats):
         """Process Nimbus Stats Response
-
         :param nimbus_stats: Nimbus stats response
         :type nimbus_stats: dict
         :return: Extracted nimbus stats metrics
@@ -439,7 +392,6 @@ class StormCheck(AgentCheck):
 
     def process_supervisor_stats(self, supervisor_stats):
         """Process Supervisor Stats Response
-
         :param supervisor_stats: Supervisor stats response
         :type supervisor_stats: dict
         :return: Extracted supervisor stats metrics
@@ -469,187 +421,96 @@ class StormCheck(AgentCheck):
 
     def process_topology_stats(self, topology_stats, interval):
         """Process Topology Stats Response
-
         :param topology_stats: Supervisor stats response
         :type topology_stats: dict
         :param interval: Interval of metrics reported
         :type interval: int
         """
 
+        def _mtsi(metric_interval, metric_name):
+            return 'storm.topologyStats.last_{}.{}'.format(metric_interval, metric_name)
+
         def _mts(metric_name):
-            return 'storm.topologyStats.last_{}.{}'.format(interval, metric_name)
+            return 'storm.topologyStats.{}'.format(metric_name)
 
         if topology_stats:
             name = _get_string(topology_stats, 'unknown', 'name').replace('.', '_').replace(':', '_')
             debug_mode = _get_bool(topology_stats, False, 'debug')
             tags = ['topology:{}'.format(name)]
 
-            self.report_histogram(
-                _mts('acked'),
-                _get_long(topology_stats, 0, 'topologyStats', 0, 'acked'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('assignedCpu'),
-                _get_float(topology_stats, 0.0, 'assignedCpu'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('assignedMemOffHeap'),
-                _get_long(topology_stats, 0, 'assignedMemOffHeap'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('assignedMemOnHeap'),
-                _get_long(topology_stats, 0, 'assignedMemOnHeap'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('assignedTotalMem'),
-                _get_long(topology_stats, 0, 'assignedTotalMem'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('completeLatency'),
-                _get_float(topology_stats, 0.0, 'topologyStats', 0, 'completeLatency'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('debug'), 1 if debug_mode else 0, tags=tags, additional_tags=self.additional_tags
-            )
-            self.report_histogram(
-                _mts('emitted'),
-                _get_long(topology_stats, 0, 'topologyStats', 0, 'emitted'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('executorsTotal'),
-                _get_long(topology_stats, 0, 'executorsTotal'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('failed'),
-                _get_long(topology_stats, 0, 'topologyStats', 0, 'failed'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('msgTimeout'),
-                _get_long(topology_stats, 0, 'msgTimeout'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('numBolts'),
-                _get_length(topology_stats, 0, 'bolts'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('numSpouts'),
-                _get_length(topology_stats, 0, 'spouts'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('replicationCount'),
-                _get_long(topology_stats, 0, 'replicationCount'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('requestedCpu'),
-                _get_float(topology_stats, 0.0, 'requestedCpu'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('requestedMemOffHeap'),
-                _get_float(topology_stats, 0.0, 'requestedMemOffHeap'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('requestedMemOnHeap'),
-                _get_float(topology_stats, 0.0, 'requestedMemOnHeap'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('samplingPct'),
-                _get_float(topology_stats, 0.0, 'samplingPct'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('tasksTotal'),
-                _get_long(topology_stats, 0, 'tasksTotal'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('transferred'),
-                _get_long(topology_stats, 0, 'topologyStats', 0, 'transferred'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('uptimeSeconds'),
-                _get_long(topology_stats, 0, 'uptimeSeconds'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
-            self.report_histogram(
-                _mts('workersTotal'),
-                _get_long(topology_stats, 0, 'workersTotal'),
-                tags=tags,
-                additional_tags=self.additional_tags,
-            )
+            # Longs:
+            for mname in ['uptimeSeconds', 'workersTotal', 'assignedMemOffHeap', 'assignedMemOnHeap',
+                                'assignedTotalMem', 'executorsTotal', 'replicationCount', 'tasksTotal']:
+                self.report_gauge(
+                    _mts(mname),
+                    _get_long(topology_stats, 0, mname),
+                    tags=tags,
+                    additional_tags=self.additional_tags
+                )
+
+            # Floats:
+            for mname in ['assignedCpu', 'requestedCpu', 'requestedMemOffHeap', 'requestedMemOnHeap',
+                                'samplingPct']:
+                self.report_gauge(
+                    _mts(mname),
+                    _get_float(topology_stats, 0, mname),
+                    tags=tags,
+                    additional_tags=self.additional_tags
+                )
+
+            # Lengths:
+            for mname in ['numBolts', 'numSpouts']:
+                self.report_gauge(
+                    _mts(mname),
+                    _get_length(topology_stats, 0, mname),
+                    tags=tags,
+                    additional_tags=self.additional_tags
+                )
+
+            for topology in _get_list(topology_stats, 'topologyStats'):
+                window = topology.get('windowPretty').split(' ')[0]
+                # Longs:
+                for mname in ['acked', 'failed', 'transferred', 'emitted']:
+                    self.report_gauge(
+                        _mtsi(window, mname),
+                        _get_long(topology_stats, 0, mname),
+                        tags=tags,
+                        additional_tags=self.additional_tags
+                    )
+                self.report_gauge(
+                    _mtsi(window, 'completeLatency'),
+                    _get_float(topology, 0, 'completeLatency'),
+                    tags=tags,
+                    additional_tags=self.additional_tags
+                )
 
             # Bolt Stats
             def _mb(metric_name):
-                return 'storm.bolt.last_{}.{}'.format(interval, metric_name)
+                return 'storm.bolt.last_10m.{}'.format(metric_name)
 
             for b in _get_list(topology_stats, 'bolts'):
                 bolt_name = _get_string(b, 'unknown', 'boltId').replace('.', '_').replace(':', '_')
                 bolt_tags = tags + ['bolt:{}'.format(bolt_name)]
 
                 # Longs:
-                for metric_name in [
-                    'acked',
-                    'emitted',
-                    'executed',
-                    'executors',
-                    'failed',
-                    'requestedMemOffHeap',
-                    'requestedMemOnHeap',
-                    'tasks',
-                    'transferred',
-                ]:
-                    self.report_histogram(
-                        _mb(metric_name),
-                        _get_long(b, 0, metric_name),
+                for mname in ['acked', 'emitted', 'executed', 'executors', 'failed', 'requestedMemOffHeap',
+                                    'requestedMemOnHeap', 'tasks', 'transferred']:
+                    self.report_gauge(
+                        _mb(mname),
+                        _get_long(b, 0, mname),
                         tags=bolt_tags,
-                        additional_tags=self.additional_tags,
+                        additional_tags=self.additional_tags
                     )
                 # Floats
-                for metric_name in ['capacity', 'executeLatency', 'processLatency', 'requestedCpu']:
-                    self.report_histogram(
-                        _mb(metric_name),
-                        _get_float(b, 0, metric_name),
+                for mname in ['capacity', 'executeLatency', 'processLatency', 'requestedCpu']:
+                    self.report_gauge(
+                        _mb(mname),
+                        _get_float(b, 0, mname),
                         tags=bolt_tags,
-                        additional_tags=self.additional_tags,
+                        additional_tags=self.additional_tags
                     )
 
-                self.report_histogram(
+                self.report_gauge(
                     _mb('errorLapsedSecs'),
                     _get_float(b, 1e10, 'errorLapsedSecs'),
                     tags=bolt_tags,
@@ -658,39 +519,30 @@ class StormCheck(AgentCheck):
 
             # Process Spout stats
             def _ms(metric_name):
-                return 'storm.spout.last_{}.{}'.format(interval, metric_name)
+                return 'storm.spout.last_10m.{}'.format(metric_name)
 
             for s in _get_list(topology_stats, 'spouts'):
                 spout_name = _get_string(s, 'unknown', 'spoutId').replace('.', '_').replace(':', '_')
                 spout_tags = tags + ['spout:{}'.format(spout_name)]
 
                 # Longs:
-                for metric_name in [
-                    'acked',
-                    'emitted',
-                    'executors',
-                    'failed',
-                    'requestedMemOffHeap',
-                    'requestedMemOnHeap',
-                    'tasks',
-                    'transferred',
-                ]:
-                    self.report_histogram(
-                        _ms(metric_name),
-                        _get_long(s, 0, metric_name),
+                for mname in ['acked', 'emitted', 'executors', 'failed', 'requestedMemOffHeap',
+                                    'requestedMemOnHeap', 'tasks', 'transferred']:
+                    self.report_gauge(
+                        _ms(mname),
+                        _get_long(s, 0, mname),
                         tags=spout_tags,
                         additional_tags=self.additional_tags,
                     )
                 # Floats
-                for metric_name in ['completeLatency', 'requestedCpu']:
-                    self.report_histogram(
-                        _ms(metric_name),
-                        _get_float(s, 0, metric_name),
+                for mname in ['completeLatency', 'requestedCpu']:
+                    self.report_gauge(
+                        _ms(mname),
+                        _get_float(s, 0, mname),
                         tags=spout_tags,
                         additional_tags=self.additional_tags,
                     )
-
-                self.report_histogram(
+                self.report_gauge(
                     _ms('errorLapsedSecs'),
                     _get_float(s, 1e10, 'errorLapsedSecs'),
                     tags=spout_tags,
@@ -699,7 +551,7 @@ class StormCheck(AgentCheck):
 
             # Process worker stats
             def _mw(metric_name):
-                return 'storm.worker.last_{}.{}'.format(interval, metric_name)
+                return 'storm.worker.last_10m.{}'.format(metric_name)
 
             for w in _get_list(topology_stats, 'workers'):
                 worker_stat = {}
@@ -708,96 +560,34 @@ class StormCheck(AgentCheck):
                 supervisor_id = _get_string(w, 'unknown', 'supervisorId')
                 worker_tags = tags + ['worker:{}:{}'.format(host, port), 'supervisor:{}'.format(supervisor_id)]
 
-                self.report_histogram(
+                #Longs
+                for mname in ['assignedMemOffHeap', 'assignedMemOnHeap', 'executorsTotal', 'uptimeSeconds']:
+                    self.report_gauge(
+                        _mw(mname),
+                        _get_long(w, 0, mname),
+                        tags=worker_tags,
+                        additional_tags=self.additional_tags,
+                    )
+                self.report_gauge(
                     _mw('assignedCpu'),
                     _get_float(w, 0, 'assignedCpu'),
                     tags=worker_tags,
-                    additional_tags=self.additional_tags,
-                )
-                self.report_histogram(
-                    _mw('assignedMemOffHeap'),
-                    _get_long(w, 0, 'assignedMemOffHeap'),
-                    tags=worker_tags,
-                    additional_tags=self.additional_tags,
-                )
-                self.report_histogram(
-                    _mw('assignedMemOnHeap'),
-                    _get_long(w, 0, 'assignedMemOnHeap'),
-                    tags=worker_tags,
-                    additional_tags=self.additional_tags,
-                )
-                self.report_histogram(
-                    _mw('executorsTotal'),
-                    _get_long(w, 0, 'executorsTotal'),
-                    tags=worker_tags,
-                    additional_tags=self.additional_tags,
-                )
-                self.report_histogram(
-                    _mw('uptimeSeconds'),
-                    _get_long(w, 0, 'uptimeSeconds'),
-                    tags=worker_tags,
-                    additional_tags=self.additional_tags,
+                    additional_tags=self.additional_tags
                 )
 
                 worker_stat[_mw('componentNumTasks')] = []
                 for cn, cv in _get_dict(w, 'componentNumTasks').items():
                     worker_component_tags = worker_tags + ['component:{}'.format(cn)]
-                    self.report_histogram(
+                    self.report_gauge(
                         _mw('componentNumTasks'),
                         _long(cv or 0),
                         tags=worker_component_tags,
-                        additional_tags=self.additional_tags,
+                        additional_tags=self.additional_tags
                     )
 
-    def process_topology_metrics(self, topology_name, topology_stats, interval):
-        """Process Topology Metrics Stats Response
-
-        :param topology_name: Topology Name
-        :type topology_name: str
-        :param topology_stats: Supervisor stats response
-        :type topology_stats: dict
-        :param interval: Interval in seconds for reported metrics
-        :type interval: int
-        """
-        if topology_stats:
-            name = topology_name.replace('.', '_').replace(':', '_')
-            tags = ['topology:{}'.format(name)]
-            for k in ('bolts', 'spouts'):
-                for s in _get_list(topology_stats, k):
-                    k_name = _get_string(s, 'unknown', 'id').replace('.', '_').replace(':', '_')
-                    k_tags = tags + ['{}:{}'.format(k, k_name)]
-                    for sc in [
-                        'acked',
-                        'complete_ms_avg',
-                        'emitted',
-                        'executed',
-                        'executed_ms_avg',
-                        'failed',
-                        'process_ms_avg',
-                        'transferred',
-                    ]:
-                        for ks in _get_list(s, sc):
-                            stream_id = _get_string(ks, 'unknown', 'stream_id')
-                            ks_tags = k_tags + ['stream:{}'.format(stream_id)]
-                            component_id = ks.get('component_id')
-                            if component_id:
-                                ks_tags.append('component:{}'.format(component_id))
-
-                            component_value = _get_float(ks, 0.0, 'value')
-                            if component_value is not None:
-                                # will make stats like these two examples
-                                # storm.topologyStats.metrics.spouts.last_60.emitted
-                                # storm.topologyStatus.metrics.bolts.last_60.acked
-                                self.report_histogram(
-                                    'storm.topologyStats.metrics.{}.last_{}.{}'.format(k, interval, sc),
-                                    component_value,
-                                    tags=ks_tags,
-                                    additional_tags=self.additional_tags,
-                                )
 
     def report_gauge(self, metric, value, tags, additional_tags):
         """Report the Gauge Metric.
-
         :param metric:
         :param value:
         :param tags:
@@ -811,7 +601,6 @@ class StormCheck(AgentCheck):
 
     def report_histogram(self, metric, value, tags, additional_tags):
         """Report the Histogram Metric.
-
         :param metric:
         :param value:
         :param tags:
@@ -825,7 +614,6 @@ class StormCheck(AgentCheck):
 
     def update_from_config(self, instance):
         """Update Configuration tunables from instance configuration.
-
         :param instance: Agent config instance.
         :return: None
         """
@@ -846,7 +634,6 @@ class StormCheck(AgentCheck):
 
     def check(self, instance):
         """Perform the agent check.
-
         :param instance: Agent instance.
         :return: None
         """
@@ -887,10 +674,6 @@ class StormCheck(AgentCheck):
                     try:
                         stats = self.get_topology_info(topology_id=topology_id, interval=interval)
                         self.process_topology_stats(topology_stats=stats, interval=interval)
-                        metric_stats = self.get_topology_metrics(
-                            topology_id=topology_id, interval=interval, storm_version=storm_version
-                        )
-                        self.process_topology_metrics(topology_name, metric_stats, interval=interval)
 
                         # only report this once.
                         if topology_status is None:
