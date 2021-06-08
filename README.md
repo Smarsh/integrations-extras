@@ -1,6 +1,5 @@
 # Datadog Agent Integrations
 
-[![Build Status][1]][2]
 [![Code style - black][9]][10]
 
 Collecting data is cheap; not having it when you need it can be very expensive. So we recommend instrumenting as much of your systems and applications as possible. This integrations repository will help you do that by making it easier to create and share new integrations for [Datadog][3].
